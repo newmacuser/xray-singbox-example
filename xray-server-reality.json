@@ -1,0 +1,173 @@
+{
+  "dns": {
+  "hosts": {
+      "dns.google": "8.8.8.8"
+    },
+    "servers": [
+      {
+        "address": "https://1.1.1.1/dns-query",  // 首选 1.1.1.1 的 DoH 查询，牺牲速度但可防止 ISP 偷窥
+        "domains": ["geosite:geolocation-!cn", "geosite:google@cn"],
+        "expectIPs": ["geoip:!cn"]
+      }, 
+      "8.8.8.8",
+      {
+        "address": "localhost",
+        "skipFallback": true
+      }
+    ]
+  },
+"routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "domainMatcher": "mph",
+    "rules": [
+   {
+            "type": "field",
+            "port": 53,
+            "network": "udp",
+            "outboundTag": "dns-out"
+   },
+      {
+        "type": "field",
+        "ip": [
+           "geoip:private" 
+        ],
+        "outboundTag": "block" 
+      },
+      {
+        "type": "field",
+        "port": "443",
+        "network": "udp",
+        "outboundTag": "block" 
+      },
+      {
+        "type": "field",
+        "ip": [
+           "geoip:cn" 
+        ],
+        "outboundTag": "wireguard-out" 
+      },
+      {
+        "type": "field",
+        "domain": [
+          "geosite:category-ads-all" 
+        ],
+        "outboundTag": "block" 
+      },
+      {
+        "type": "field",
+        "domain": [
+          "geosite:cn" 
+        ],
+        "outboundTag": "wireguard-out" 
+      },
+      {
+        "type": "field",
+        "outboundTag": "IP6-out",
+        "domain": [""] 
+      },
+      {
+        "type": "field",
+        "outboundTag": "IP4-out",
+        "network": "udp,tcp" 
+      }
+    ]
+  },
+"inbounds": [
+        { 
+            "port": 1093, 
+            "protocol": "socks", 
+            "sniffing": {
+            "enabled": true,
+            "destOverride": ["http", "tls"]
+            },
+            "settings": {
+               "auth": "noauth"
+            }
+        },
+        {
+            "listen": "127.0.0.1", // xray is behind nginx; if not listen 0.0.0.0
+            "port": 443,
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "ID",
+                        "flow": "xtls-rprx-vision"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "tcpSettings": {
+                  "acceptProxyProtocol": true // if not behind nginx, then set to false
+                },
+                "security": "reality",
+                "realitySettings": {
+                  "show": false,
+                  "dest": "A-web-site:443",
+                  "xver": 0,
+                  "serverNames": [
+                     "A-web-site", ""
+                  ],
+                  "privateKey": "A-long-key",
+                  "minClientVer": "1.8.0",
+                  "shortIds": [ 
+                     "c52d11c32d15", "A-short-key"
+                  ]
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
+            }
+        }
+    ], 
+    "outbounds": [
+    {
+      "tag":"IP4-out",
+      "protocol": "freedom",
+      "settings": {}
+    },
+    {
+      "tag":"IP6-out",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIPv6" 
+      }
+    },
+    {
+       "tag": "wireguard-out",
+       "protocol": "wireguard",
+       "settings": {
+       "secretKey": "Your-own-key",
+         "peers": [
+           {
+             "publicKey": "Your-own-key",
+             "endpoint": "Your-wireguard-address"
+           }
+          ],
+       "reserved":[230,25,169]
+       }
+     },
+     {
+      "tag": "block",
+      "protocol": "blackhole"
+    },
+    {
+        "protocol": "dns",
+        "tag": "dns-out"
+    }
+  ],
+  "policy": {
+         "levels": {
+               "0": { 
+                    "handshake": 2,
+                    "connIdle": 120
+                }
+           }
+      }
+}
