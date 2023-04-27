@@ -15,7 +15,6 @@
             {
                 "tag":"dns_china",
                 "address":"local",
-                "address_resolver": "dns_cf",
                 "address_strategy": "prefer_ipv4",
                 "strategy": "ipv4_only",
                 "detour":"direct"
