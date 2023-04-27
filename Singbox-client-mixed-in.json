@@ -1,0 +1,137 @@
+{
+    "log": {
+        "level": "info",
+        "timestamp": true
+    },
+    "dns": {
+        "servers": [
+            {
+                "tag":"dns_cf",
+                "address":"https://1.1.1.1/dns-query",
+             "address_resolver": "dns_china",
+             "strategy": "ipv4_only",
+            "detour": "proxy"
+            },
+            {
+                "tag":"dns_china",
+                "address":"local",
+                "address_resolver": "dns_cf",
+                "address_strategy": "prefer_ipv4",
+                "strategy": "ipv4_only",
+                "detour":"direct"
+            },
+            {
+              "tag": "block",
+              "address": "rcode://success"
+              }
+        ],
+        "rules":[
+            {
+                "domain":"myChinaDnsSite.com",
+                "geosite": ["cn", "private", "category-games@cn"],
+                "domain_suffix":".cn",
+                "server":"dns_china",
+                "disable_cache": false
+            },
+          {
+              "geosite": [
+              "category-ads-all"],
+              "server": "block",
+              "disable_cache": true
+             }
+        ],
+        "final": "dns_cf",
+        "disable_cache":false,
+        "disable_expire":false
+    },
+    "route": {
+         "geoip": {
+            "path": "geoip.db",
+            "download_url": "https://github.com/soffchen/sing-geoip/releases/latest/download/geoip.db",
+            "download_detour": "proxy"},
+         "geosite": {
+            "path": "geosite.db",
+            "download_url": "https://github.com/soffchen/sing-geosite/releases/latest/download/geosite.db",
+            "download_detour": "proxy"},
+        "rules": [
+           {
+              "protocol": "dns",
+              "outbound": "dns-out"
+           },
+           {
+              "network":"udp",
+              "port":[443],
+              "outbound":"block"
+            },
+            {
+                "geosite": [
+                    "cn",
+                    "private"
+                ],
+                "geoip": [
+                    "cn",
+                    "private"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "geosite": [
+                    "gfw",
+                    "onedrive",
+                    "telegram"
+                ],
+                "geoip": [
+                    "telegram"
+                ],
+                "outbound": "proxy"
+            }
+        ],
+        "final": "direct"
+    },
+    "inbounds": [
+        {
+            "type": "mixed",
+            "tag": "mixed-in",
+            "listen": "::",
+            "listen_port": 1089,
+            "domain_strategy": "ipv4_only",
+            "set_system_proxy": false
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "vless",
+            "tag": "proxy",
+            "server": "IP",
+            "server_port": 443,
+            "uuid": "ID",
+            "flow": "xtls-rprx-vision",
+            "tls": {
+                "enabled": true,
+                "server_name": "A_Web_Name",
+                "utls": {
+                    "enabled": true,
+                    "fingerprint": "chrome"
+                },
+                "reality": {
+                    "enabled": true,
+                    "public_key": "A_long_key",
+                    "short_id": "A_short_key"
+                }
+            },
+            "packet_encoding": "xudp"
+        },
+        {
+            "type": "direct",
+            "tag": "direct"
+        },
+        {
+            "type": "block",
+            "tag": "block"
+        },
+       {
+            "type": "dns",
+            "tag": "dns-out"
+       }
+    ]
+}
