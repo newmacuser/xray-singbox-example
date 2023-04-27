@@ -8,7 +8,7 @@
     "servers": [
       {
         "tag": "dns_china",
-        "address": "https://dns.alidns.com/dns-query",
+        "address": "https://223.5.5.5/dns-query",
         "address_strategy": "prefer_ipv4",
         "strategy": "ipv4_only",
         "detour": "direct"},
