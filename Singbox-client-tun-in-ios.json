@@ -78,6 +78,7 @@
           "enabled": true,
           "public_key": "A_long_key",
           "short_id": "A_short_key"}
+      }
     },
     {
       "type": "direct",
