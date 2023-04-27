@@ -1,0 +1,136 @@
+{
+  "log": {
+    "disabled": true,
+    "level": "info",
+    "output": "sing-box.log",
+    "timestamp": true},
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns_china",
+        "address": "https://dns.alidns.com/dns-query",
+        "address_resolver": "dns_cf",
+        "address_strategy": "prefer_ipv4",
+        "strategy": "ipv4_only",
+        "detour": "direct"},
+      {
+        "tag": "dns_cf",
+        "address": "https://1.1.1.1/dns-query",
+        "address_resolver": "dns_china",
+        "strategy": "ipv4_only",
+        "detour": "proxy"},
+      {
+        "tag": "block",
+        "address": "rcode://success"}
+    ],
+    "rules": [
+      {
+        "geosite": [
+          "cn"],
+        "domain": [
+          "myChinaDnsSite.com"],
+        "domain_suffix": [
+          ".cn"],
+        "server": "dns_china",
+        "disable_cache": false},
+      {
+        "geosite": [
+          "category-ads-all"],
+        "server": "block",
+        "disable_cache": true}
+    ],
+    "final": "dns_cf",
+    "strategy": "",
+    "disable_cache": false,
+    "disable_expire": false},
+  "inbounds": [
+    {
+      "tag": "tun-in",
+      "type": "tun",
+      "interface_name": "utun",
+      "inet4_address": "172.19.0.1/30",
+      "auto_route": true,
+      "strict_route": true,
+      "stack": "gvisor",
+      "mtu": 9000,
+      "sniff": true,
+      "sniff_timeout": "300ms",
+      "domain_strategy": "",
+      "udp_timeout": 300}
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "type": "vless",
+      "server": "IP",
+      "server_port": 443,
+      "uuid": "ID",
+      "flow": "xtls-rprx-vision",
+      "network": "tcp",
+      "packet_encoding": "xudp",
+      "tls": {
+        "enabled": true,
+        "server_name": "A_web_server",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "ios"},
+        "reality": {
+          "enabled": true,
+          "public_key": "A_long_key",
+          "short_id": "A_short_key"}
+    },
+    {
+      "type": "direct",
+      "tag": "direct"},
+    {
+      "type": "block",
+      "tag": "block"},
+    {
+      "type": "dns",
+      "tag": "dns-out"}
+  ],
+  "route": {
+    "geoip": {
+      "path": "geoip.db",
+      "download_url": "https://github.com/soffchen/sing-geoip/releases/latest/download/geoip.db",
+      "download_detour": "proxy"},
+    "geosite": {
+      "path": "geosite.db",
+      "download_url": "https://github.com/soffchen/sing-geosite/releases/latest/download/geosite.db",
+      "download_detour": "proxy"},
+    "rules": [
+      {
+        "protocol": "dns",
+        "outbound": "dns-out"},
+      {
+        "network":"udp",
+        "port":[443],
+        "outbound":"block"
+      },
+      {
+        "domain": [
+          "myProxy.com"],
+        "outbound": "proxy"},
+      {
+        "domain": [
+          "myDirect.com"],
+        "outbound": "direct"},
+      {
+        "geosite": [
+          "cn",
+          "private"],
+        "geoip": [
+          "cn",
+          "private"],
+        "domain_suffix": [
+          ".cn"],
+        "outbound": "direct"},
+      {
+        "geosite": [
+          "category-ads-all"],
+        "outbound": "block"}
+    ],
+    "auto_detect_interface": true,
+    "final": "proxy"},
+  "experimental": {}
+}
